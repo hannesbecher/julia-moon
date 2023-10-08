@@ -60,6 +60,9 @@ dat.ms = map(Dates.value, dat.dt)
 dat.days= dat.ms./(1000*60*60*24)
 
 # ╔═╡ 623b1126-9110-4bda-a5ce-bb98bfe0c293
+dat.days2 = dat.days .- 738790
+
+# ╔═╡ 42621d26-0423-44ba-90cc-3b48b6a0a414
 dat
 
 # ╔═╡ 72e1cfd1-c027-4443-910c-4113ade5d824
@@ -69,8 +72,8 @@ md"""
 
 # ╔═╡ 937f4fa0-d296-4634-8123-8763639282fc
 begin
-	@df dat scatter(:days, :Az, label="Az")
-	@df dat scatter!(:days, :decalt, label="Alt")
+	@df dat scatter(:days2, :Az, label="Az")
+	@df dat scatter!(:days2, :decalt, label="Alt")
 end
 
 # ╔═╡ 74b6b55e-8d4a-441a-a78e-bf04cce7ae3c
@@ -93,9 +96,9 @@ slopeEst2=(dat.Az[5]-dat.Az[4])/(dat.days[5]-dat.days[4])
 
 # ╔═╡ 8641c0d5-7e11-450d-b3c2-6c1a8048eb8e
 begin
-	@df dat scatter(:days, :Az, label="Az")
+	@df dat scatter(:days2, :Az, label="Az")
 	 # period
-	plot!(x ->mod(x*340+00, 360), dat.days[1], dat.days[8], label="fit")
+	plot!(x ->mod(x*340+00, 360), dat.days2[1], dat.days2[8], label="fit")
 	#plot!(x ->mod(x*4e-6+100, 360), dat.ms[1], dat.ms[8], label="fit2")
 end
 
@@ -103,7 +106,7 @@ end
 4.1e-6*1000*60*60*24
 
 # ╔═╡ 384a28ba-8278-4e71-a617-8f422c71a4d7
-dat.days .* slopeEst
+dat.days2 .* slopeEst
 
 # ╔═╡ 52620117-a270-4e35-bc16-186f5f3ed9a8
 md"""
@@ -124,34 +127,34 @@ Azimuth model assuming constant speed.
 az2p(dd, pars) = mod.(dd*pars[2].+pars[1], 1)*360
 
 # ╔═╡ fffd1449-98fb-4acd-9970-511701229854
-az2pmin(x) = sum((az2p(dat.days, x) - dat.Az).^2)
+az2pmin(x) = sum((az2p(dat.days2, x) - dat.Az).^2)
 
 # ╔═╡ f08f5337-3230-4c32-8dde-e2a2475f0ded
-az2pmin2(x) = sum(tan.((az2p(dat.days, x) - dat.Az)/360*π).^2)
+az2pmin2(x) = sum(tan.((az2p(dat.days2, x) - dat.Az)/360*π).^2)
 
 # ╔═╡ 3ee64fa5-ade7-4e5c-957d-da83bc4f2eca
 dat.Az
 
 # ╔═╡ ab92ae27-26d9-4df8-adc4-2704a9ca1de3
-az2p(dat.days,[.8, 0.705])
+az2p(dat.days2,[.8, 0.705])
 
 # ╔═╡ 84c79fdb-9dce-42b8-b3f8-033336083bc9
-az2p(dat.days,[.8, 0.705]) - dat.Az
+az2p(dat.days2,[.8, 0.705]) - dat.Az
 
 # ╔═╡ 892e80c2-43b6-492c-a901-8c635951f3ff
-(az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π
+(az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π
 
 # ╔═╡ d4e7ad4d-f35b-4933-b06a-a6a4bd092515
-tan.((az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π)
+tan.((az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π)
 
 # ╔═╡ 021ccbe8-7452-4413-af64-705e3cd09bb7
-sin.((az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π)
+sin.((az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π)
 
 # ╔═╡ 42a9d96c-317e-4fa1-aa02-908175bb4291
-(tan.((az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π).^2)
+(tan.((az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π).^2)
 
 # ╔═╡ 150ce705-b0f2-48e4-95d1-a832080b585b
-sum(tan.((az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π).^2)
+sum(tan.((az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π).^2)
 
 # ╔═╡ 74c53eb1-1cbf-40f7-8adc-70f80e1d8a94
 md"""
@@ -159,25 +162,25 @@ Bad fit example
 """
 
 # ╔═╡ 148d98d6-fa01-4923-8d61-0504c81e25bd
-map(x -> az2p(x, [0.1, 0.97]), dat.days)
+map(x -> az2p(x, [0.1, 0.97]), dat.days2)
 
 # ╔═╡ 0f006827-c17f-4a52-914d-c0a706cd8d97
 dat.Az
 
 # ╔═╡ de423b44-cded-46c1-bb4c-cbb26a195a02
-sum(tan.((map(x -> az2p(x, [0.1, 0.97]), dat.days) - dat.Az)/360*π).^2)
+sum(tan.((map(x -> az2p(x, [0.1, 0.97]), dat.days2) - dat.Az)/360*π).^2)
 
 # ╔═╡ 4189cdf5-53d1-4e94-9401-49b8e140141b
-sum(tan.((az2p(dat.days, [0.1, 0.97]) - dat.Az)/360*π).^2)
+sum(tan.((az2p(dat.days2, [0.1, 0.97]) - dat.Az)/360*π).^2)
 
 # ╔═╡ 72cee64a-b20d-4768-b4b9-d7e8131423de
 az2pmin2([0.1, 0.97])
 
 # ╔═╡ a189b1a6-e4b6-4e7f-90b5-0e9ee288a151
-map(x -> az2p(x, [0.1, 0.97]), dat.days)
+map(x -> az2p(x, [0.1, 0.97]), dat.days2)
 
 # ╔═╡ 1d776284-9311-4557-8b29-fc20c605c2a7
-az2p(dat.days, [0.1, 0.97])
+az2p(dat.days2, [0.1, 0.97])
 
 # ╔═╡ dfe51879-9a46-4c9c-90c1-463e6aeec130
 md"""
@@ -185,7 +188,7 @@ Good one
 """
 
 # ╔═╡ a87821ab-aaef-45bf-aa36-8f1e86c248b7
-sum(tan.((map(x -> az2p(x, [0.25, 0.97]), dat.days) - dat.Az)/360*π).^2)
+sum(tan.((map(x -> az2p(x, [0.25, 0.97]), dat.days2) - dat.Az)/360*π).^2)
 
 # ╔═╡ db7f1b2f-c9aa-49f8-91fc-ab69a74cb168
 md"""
@@ -195,9 +198,9 @@ Is not working well.
 
 # ╔═╡ bdcc41ab-7b7d-4c60-8ead-3eaee304a511
 begin
-	lower = [-0.4, .9]
-	upper = [0.4, 1.0]
-	initial_x = [0.1,.91]
+	lower = [0.0, .9]
+	upper = [0.9, 1.0]
+	initial_x = [0.4,.91]
 	inner_optimizer = GradientDescent()
 	#inner_optimizer = LBFGS()
 	results = optimize(az2pmin, lower, upper, initial_x, Fminbox(inner_optimizer))
@@ -262,6 +265,7 @@ minimum(log.(diffs))
 heatmap(jr, ir, log.(diffs) .< -2.9)
 
 # ╔═╡ 47a1e394-323c-416b-9c3a-9d38b95fe225
+# retain only good fits
 aaa = [[(i, j, log(az2pmin2([i, j]))) for i = ir if log(az2pmin2([i, j])) < -2.9 ] for j = jr]
 
 # ╔═╡ ebe4ed34-49a5-420a-b7a6-b7656576175a
@@ -275,11 +279,25 @@ goodCombsGrid[1][1][1:2]
 
 # ╔═╡ adb5cd95-9b4e-4cab-8a70-73b96aece51e
 begin
-	@df dat scatter(:days, :Az, label="Az")
+	@df dat scatter(:days2, :Az, label="Az")
 	sl=0.9
-	plot!(x -> az2p(x, [0.25, 0.97]), dat.days[1], dat.days[8], label="good fit")
-	plot!(x ->az2p(x, goodCombsGrid[5][1][1:2]), dat.days[1], dat.days[8], label="grid")
+	plot!(x ->az2p(x, goodCombsGrid[3][1][1:2]), dat.days2[1], dat.days2[8], label="grid3")
+	plot!(x ->az2p(x, goodCombsGrid[5][1][1:2]), dat.days2[1], dat.days2[8], label="grid5")
 end
+
+# ╔═╡ 75fc039d-0213-428f-af7f-0ec0eaa1ae41
+md"""
+# Altitude
+"""
+
+# ╔═╡ 92df73a2-4e94-4fd5-8958-9f9c959c6d3e
+begin
+	@df dat scatter(:days2, :decalt, label="Altitude data")
+	plot!(x -> sin(x*2π*1-5.9)*90, dat.days2[1], dat.days2[8], label="manual fit")
+end
+
+# ╔═╡ 4cb671ac-d8fe-4b6f-943f-854c3ca2ae5f
+@df dat scatter(:Az, :decalt)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1901,6 +1919,7 @@ version = "1.4.1+1"
 # ╠═afe449fb-b7d1-4335-b4a6-60e18e2e80c4
 # ╠═686b681d-a7f7-4d27-a779-059885c85ee2
 # ╠═623b1126-9110-4bda-a5ce-bb98bfe0c293
+# ╠═42621d26-0423-44ba-90cc-3b48b6a0a414
 # ╟─72e1cfd1-c027-4443-910c-4113ade5d824
 # ╠═937f4fa0-d296-4634-8123-8763639282fc
 # ╠═74b6b55e-8d4a-441a-a78e-bf04cce7ae3c
@@ -1955,5 +1974,8 @@ version = "1.4.1+1"
 # ╠═aaa60a2e-7431-486b-9afe-b626d2860a8d
 # ╠═11aceb49-d740-463f-8031-a643f1aa3135
 # ╠═adb5cd95-9b4e-4cab-8a70-73b96aece51e
+# ╠═75fc039d-0213-428f-af7f-0ec0eaa1ae41
+# ╠═92df73a2-4e94-4fd5-8958-9f9c959c6d3e
+# ╠═4cb671ac-d8fe-4b6f-943f-854c3ca2ae5f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
