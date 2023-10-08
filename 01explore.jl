@@ -123,11 +123,23 @@ az2p(dd, pars) = mod.(dd*pars[2].+pars[1], 360)
 # ╔═╡ fffd1449-98fb-4acd-9970-511701229854
 az2pmin(x) = sum((az2p(dat.ms, x) - dat.Az).^2)
 
+# ╔═╡ f08f5337-3230-4c32-8dde-e2a2475f0ded
+az2pmin2(x) = sum((sin.(az2p(dat.ms, x) - dat.Az)/180).^2)
+
 # ╔═╡ 84c79fdb-9dce-42b8-b3f8-033336083bc9
-az2p(dat.ms,[100, 4e-6])
+az2p(dat.ms,[200, 4e-6]) - dat.Az
+
+# ╔═╡ 892e80c2-43b6-492c-a901-8c635951f3ff
+(az2p(dat.ms,[200, 4e-6]) - dat.Az)/180
+
+# ╔═╡ d4e7ad4d-f35b-4933-b06a-a6a4bd092515
+sin.((az2p(dat.ms,[200, 4e-6]) - dat.Az)/180)
+
+# ╔═╡ 42a9d96c-317e-4fa1-aa02-908175bb4291
+(sin.((az2p(dat.ms,[200, 4e-6]) - dat.Az)/180).^2)
 
 # ╔═╡ 150ce705-b0f2-48e4-95d1-a832080b585b
-mod.(dat.ms * 4e-6 .+ 100, 360)
+sum(sin.((az2p(dat.ms,[40, 4.01e-6]) - dat.Az)/180).^2)
 
 # ╔═╡ db7f1b2f-c9aa-49f8-91fc-ab69a74cb168
 md"""
@@ -137,21 +149,23 @@ Is not working well.
 
 # ╔═╡ bdcc41ab-7b7d-4c60-8ead-3eaee304a511
 begin
-	lower = [0., 3.4e-6]
-	upper = [359., 4.5e-6]
-	initial_x = [40.,4.05e-6]
+	lower = [0., 4.0e-6]
+	upper = [359., 4.2e-6]
+	initial_x = [140.,4.05e-6]
 	inner_optimizer = GradientDescent()
 	results = optimize(az2pmin, lower, upper, initial_x, Fminbox(inner_optimizer))
 end
 
-# ╔═╡ c1ebd018-1578-4c4b-9bbe-2ffe0cf86597
-
-
 # ╔═╡ 0e6f7d0b-58fc-4edb-9158-fdfb42e1ec2b
 results.minimizer
 
+# ╔═╡ c1ebd018-1578-4c4b-9bbe-2ffe0cf86597
+begin
+	results2 = optimize(az2pmin2, lower, upper, initial_x, Fminbox(inner_optimizer))
+end
+
 # ╔═╡ d64bbafd-6d95-43e8-89d4-0f4f0e67f620
-results.minimizer[1]/1000/60/60
+results2.minimizer
 
 # ╔═╡ 5baa42cf-9dc4-47a9-89dd-9d672e397748
 md"""
@@ -175,11 +189,11 @@ begin
 	ilen=100
 	jlen=1000
 	ir=LinRange(0, 359, ilen)
-	jr=LinRange(4.03e-6, 4.04e-6, jlen)
+	jr=LinRange(3.9e-6, 4.5e-6, jlen)
 	diffs=zeros(ilen, jlen)
 	for (i,iv) in enumerate(ir)
 		for (j, jv) in enumerate(jr)
-			diffs[i, j] = az2pmin([iv, jv])
+			diffs[i, j] = az2pmin2([iv, jv])
 		end
 	end
 end
@@ -196,9 +210,9 @@ minimum(log.(diffs))
 # ╔═╡ 66bc791f-e941-4902-bc48-1b5d8a375668
 
 begin
-	contour(jr, ir, log.(diffs) .< 6.55)
+	contour(jr, ir, log.(diffs) .< -11)
 	hline!([280])
-	vline!([4.037e-6])
+	vline!([4.030e-6])
 end
 
 # ╔═╡ 11aceb49-d740-463f-8031-a643f1aa3135
@@ -1847,12 +1861,16 @@ version = "1.4.1+1"
 # ╟─d26ae24f-52a9-4d4a-9bc9-4308a91332f2
 # ╠═7604744c-2f2c-4ee6-93e6-e0f905d363c0
 # ╠═fffd1449-98fb-4acd-9970-511701229854
+# ╠═f08f5337-3230-4c32-8dde-e2a2475f0ded
 # ╠═84c79fdb-9dce-42b8-b3f8-033336083bc9
+# ╠═892e80c2-43b6-492c-a901-8c635951f3ff
+# ╠═d4e7ad4d-f35b-4933-b06a-a6a4bd092515
+# ╠═42a9d96c-317e-4fa1-aa02-908175bb4291
 # ╠═150ce705-b0f2-48e4-95d1-a832080b585b
 # ╟─db7f1b2f-c9aa-49f8-91fc-ab69a74cb168
 # ╠═bdcc41ab-7b7d-4c60-8ead-3eaee304a511
-# ╠═c1ebd018-1578-4c4b-9bbe-2ffe0cf86597
 # ╠═0e6f7d0b-58fc-4edb-9158-fdfb42e1ec2b
+# ╠═c1ebd018-1578-4c4b-9bbe-2ffe0cf86597
 # ╠═d64bbafd-6d95-43e8-89d4-0f4f0e67f620
 # ╟─5baa42cf-9dc4-47a9-89dd-9d672e397748
 # ╠═c6e012f9-14b3-45bd-bc6b-c88947dd76ca
