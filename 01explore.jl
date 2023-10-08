@@ -56,6 +56,9 @@ dat.decalt = map(decalt, dat.Alt)
 # ╔═╡ afe449fb-b7d1-4335-b4a6-60e18e2e80c4
 dat.ms = map(Dates.value, dat.dt)
 
+# ╔═╡ 686b681d-a7f7-4d27-a779-059885c85ee2
+dat.days= dat.ms./(1000*60*60*24)
+
 # ╔═╡ 623b1126-9110-4bda-a5ce-bb98bfe0c293
 dat
 
@@ -66,18 +69,18 @@ md"""
 
 # ╔═╡ 937f4fa0-d296-4634-8123-8763639282fc
 begin
-	@df dat scatter(:ms, :Az, label="Az")
-	@df dat scatter!(:ms, :decalt, label="Alt")
+	@df dat scatter(:days, :Az, label="Az")
+	@df dat scatter!(:days, :decalt, label="Alt")
 end
 
 # ╔═╡ 74b6b55e-8d4a-441a-a78e-bf04cce7ae3c
 Dates.value(dat.dt[1])
 
 # ╔═╡ bb4585c5-0f22-463c-8f69-e85cab984307
-slopeEst=(dat.Az[8]-dat.Az[7])/(dat.ms[8]-dat.ms[7])
+slopeEst=(dat.Az[8]-dat.Az[7])/(dat.days[8]-dat.days[7])
 
 # ╔═╡ cab6607c-7e36-4986-bb23-e65f0be3a5a9
-slopeEst2=(dat.Az[5]-dat.Az[4])/(dat.ms[5]-dat.ms[4])
+slopeEst2=(dat.Az[5]-dat.Az[4])/(dat.days[5]-dat.days[4])
 
 # ╔═╡ 9eddca83-acb2-4f86-8315-14ffaba268a7
 4e-6*1000*60*60*24
@@ -90,9 +93,9 @@ slopeEst2=(dat.Az[5]-dat.Az[4])/(dat.ms[5]-dat.ms[4])
 
 # ╔═╡ 8641c0d5-7e11-450d-b3c2-6c1a8048eb8e
 begin
-	@df dat scatter(:ms, :Az, label="Az")
-	prd=23*60*60*1000 # period
-	plot!(x ->mod(x*4.03e-6+00, 360), dat.ms[1], dat.ms[8], label="fit")
+	@df dat scatter(:days, :Az, label="Az")
+	 # period
+	plot!(x ->mod(x*340+00, 360), dat.days[1], dat.days[8], label="fit")
 	#plot!(x ->mod(x*4e-6+100, 360), dat.ms[1], dat.ms[8], label="fit2")
 end
 
@@ -100,7 +103,7 @@ end
 4.1e-6*1000*60*60*24
 
 # ╔═╡ 384a28ba-8278-4e71-a617-8f422c71a4d7
-dat.ms .* slopeEst
+dat.days .* slopeEst
 
 # ╔═╡ 52620117-a270-4e35-bc16-186f5f3ed9a8
 md"""
@@ -118,28 +121,31 @@ Azimuth model assuming constant speed.
 """
 
 # ╔═╡ 7604744c-2f2c-4ee6-93e6-e0f905d363c0
-az2p(dd, pars) = mod.(dd*pars[2].+pars[1], 360)
+az2p(dd, pars) = mod.(dd*pars[2].+pars[1], 1)*360
 
 # ╔═╡ fffd1449-98fb-4acd-9970-511701229854
-az2pmin(x) = sum((az2p(dat.ms, x) - dat.Az).^2)
+az2pmin(x) = sum((az2p(dat.days, x) - dat.Az).^2)
 
 # ╔═╡ f08f5337-3230-4c32-8dde-e2a2475f0ded
-az2pmin2(x) = sum((sin.(az2p(dat.ms, x) - dat.Az)/180).^2)
+az2pmin2(x) = sum((tan.(az2p(dat.days, x) - dat.Az)/360*π).^2)
+
+# ╔═╡ ab92ae27-26d9-4df8-adc4-2704a9ca1de3
+az2p(dat.days,[.8, 0.9])
 
 # ╔═╡ 84c79fdb-9dce-42b8-b3f8-033336083bc9
-az2p(dat.ms,[200, 4e-6]) - dat.Az
+az2p(dat.days,[.8, 0.9]) - dat.Az
 
 # ╔═╡ 892e80c2-43b6-492c-a901-8c635951f3ff
-(az2p(dat.ms,[200, 4e-6]) - dat.Az)/180
+(az2p(dat.days,[.8, 0.9]) - dat.Az)/360*π
 
 # ╔═╡ d4e7ad4d-f35b-4933-b06a-a6a4bd092515
-sin.((az2p(dat.ms,[200, 4e-6]) - dat.Az)/180)
+tan.((az2p(dat.days,[.8, 0.9]) - dat.Az)/360*π)
 
 # ╔═╡ 42a9d96c-317e-4fa1-aa02-908175bb4291
-(sin.((az2p(dat.ms,[200, 4e-6]) - dat.Az)/180).^2)
+(tan.((az2p(dat.days,[.8, 0.9]) - dat.Az)/360*π).^2)
 
 # ╔═╡ 150ce705-b0f2-48e4-95d1-a832080b585b
-sum(sin.((az2p(dat.ms,[40, 4.01e-6]) - dat.Az)/180).^2)
+sum(tan.((az2p(dat.days,[.01, 0.97]) - dat.Az)/360*π).^2)
 
 # ╔═╡ db7f1b2f-c9aa-49f8-91fc-ab69a74cb168
 md"""
@@ -149,9 +155,9 @@ Is not working well.
 
 # ╔═╡ bdcc41ab-7b7d-4c60-8ead-3eaee304a511
 begin
-	lower = [0., 4.0e-6]
-	upper = [359., 4.2e-6]
-	initial_x = [140.,4.05e-6]
+	lower = [0., 0.9]
+	upper = [1, 0.99]
+	initial_x = [0.5,0.97]
 	inner_optimizer = GradientDescent()
 	results = optimize(az2pmin, lower, upper, initial_x, Fminbox(inner_optimizer))
 end
@@ -175,8 +181,9 @@ The fit is not so great for the earlier observations. Is my model too simple?
 # ╔═╡ c6e012f9-14b3-45bd-bc6b-c88947dd76ca
 begin
 	# seems fine to combine DateTime and ms
-	@df dat scatter(:dt, :Az)
-	plot!(x -> az2p(x, results.minimizer), dat.ms[1], dat.ms[end], labeel="fit")
+	@df dat scatter(:days, :Az)
+	plot!(x -> az2p(x, results.minimizer), dat.days[1], dat.days[end], labeel="fit1")
+	plot!(x -> az2p(x, results2.minimizer), dat.days[1], dat.days[end], label="fit2")
 end
 
 # ╔═╡ 65b6368d-f54e-4f02-b885-f05d2be30aaf
@@ -187,9 +194,9 @@ md"""
 # ╔═╡ 7d6d67b3-af17-470d-8947-9021a077b360
 begin
 	ilen=100
-	jlen=1000
-	ir=LinRange(0, 359, ilen)
-	jr=LinRange(3.9e-6, 4.5e-6, jlen)
+	jlen=100
+	ir=LinRange(0, 0.8, ilen)
+	jr=LinRange(0.9, 1.0, jlen)
 	diffs=zeros(ilen, jlen)
 	for (i,iv) in enumerate(ir)
 		for (j, jv) in enumerate(jr)
@@ -199,13 +206,13 @@ begin
 end
 
 # ╔═╡ 74c53971-145e-4053-97f6-c6ae926a6426
-heatmap(log.(diffs))
-
-# ╔═╡ 0cccf0c5-67d3-4d63-a7f8-0a5a7e3acf34
-
+heatmap(jr, ir, log.(diffs))
 
 # ╔═╡ d12a9b39-065d-4cad-a4d4-13adf30e5eeb
 minimum(log.(diffs))
+
+# ╔═╡ 0cccf0c5-67d3-4d63-a7f8-0a5a7e3acf34
+heatmap(jr, ir, log.(diffs) .< -9.7)
 
 # ╔═╡ 66bc791f-e941-4902-bc48-1b5d8a375668
 
@@ -220,9 +227,9 @@ end
 
 # ╔═╡ adb5cd95-9b4e-4cab-8a70-73b96aece51e
 begin
-	@df dat scatter(:ms, :Az, label="Az")
-	sl=4.037e-6
-	plot!(x ->mod(x*sl+250, 360), dat.ms[1], dat.ms[8], label="fit")
+	@df dat scatter(:days, :Az, label="Az")
+	sl=0.9
+	plot!(x ->mod(x*results.minimizer[2]+results.minimizer[1], 1)*360, dat.days[1], dat.days[8], label="fit")
 	#plot!(x ->mod(x*sl+200, 360), dat.ms[1], dat.ms[8], label="fit2")
 end
 
@@ -1844,6 +1851,7 @@ version = "1.4.1+1"
 # ╠═135c02fa-7bea-4730-af40-53e7a4f02962
 # ╠═7297da96-ca98-4fe5-b665-53f35cc40603
 # ╠═afe449fb-b7d1-4335-b4a6-60e18e2e80c4
+# ╠═686b681d-a7f7-4d27-a779-059885c85ee2
 # ╠═623b1126-9110-4bda-a5ce-bb98bfe0c293
 # ╟─72e1cfd1-c027-4443-910c-4113ade5d824
 # ╠═937f4fa0-d296-4634-8123-8763639282fc
@@ -1862,6 +1870,7 @@ version = "1.4.1+1"
 # ╠═7604744c-2f2c-4ee6-93e6-e0f905d363c0
 # ╠═fffd1449-98fb-4acd-9970-511701229854
 # ╠═f08f5337-3230-4c32-8dde-e2a2475f0ded
+# ╠═ab92ae27-26d9-4df8-adc4-2704a9ca1de3
 # ╠═84c79fdb-9dce-42b8-b3f8-033336083bc9
 # ╠═892e80c2-43b6-492c-a901-8c635951f3ff
 # ╠═d4e7ad4d-f35b-4933-b06a-a6a4bd092515
@@ -1877,8 +1886,8 @@ version = "1.4.1+1"
 # ╟─65b6368d-f54e-4f02-b885-f05d2be30aaf
 # ╠═7d6d67b3-af17-470d-8947-9021a077b360
 # ╠═74c53971-145e-4053-97f6-c6ae926a6426
-# ╠═0cccf0c5-67d3-4d63-a7f8-0a5a7e3acf34
 # ╠═d12a9b39-065d-4cad-a4d4-13adf30e5eeb
+# ╠═0cccf0c5-67d3-4d63-a7f8-0a5a7e3acf34
 # ╠═66bc791f-e941-4902-bc48-1b5d8a375668
 # ╠═11aceb49-d740-463f-8031-a643f1aa3135
 # ╠═adb5cd95-9b4e-4cab-8a70-73b96aece51e
