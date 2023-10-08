@@ -127,25 +127,65 @@ az2p(dd, pars) = mod.(dd*pars[2].+pars[1], 1)*360
 az2pmin(x) = sum((az2p(dat.days, x) - dat.Az).^2)
 
 # ╔═╡ f08f5337-3230-4c32-8dde-e2a2475f0ded
-az2pmin2(x) = sum((tan.(az2p(dat.days, x) - dat.Az)/360*π).^2)
+az2pmin2(x) = sum(tan.((az2p(dat.days, x) - dat.Az)/360*π).^2)
+
+# ╔═╡ 3ee64fa5-ade7-4e5c-957d-da83bc4f2eca
+dat.Az
 
 # ╔═╡ ab92ae27-26d9-4df8-adc4-2704a9ca1de3
-az2p(dat.days,[.8, 0.9])
+az2p(dat.days,[.8, 0.705])
 
 # ╔═╡ 84c79fdb-9dce-42b8-b3f8-033336083bc9
-az2p(dat.days,[.8, 0.9]) - dat.Az
+az2p(dat.days,[.8, 0.705]) - dat.Az
 
 # ╔═╡ 892e80c2-43b6-492c-a901-8c635951f3ff
-(az2p(dat.days,[.8, 0.9]) - dat.Az)/360*π
+(az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π
 
 # ╔═╡ d4e7ad4d-f35b-4933-b06a-a6a4bd092515
-tan.((az2p(dat.days,[.8, 0.9]) - dat.Az)/360*π)
+tan.((az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π)
+
+# ╔═╡ 021ccbe8-7452-4413-af64-705e3cd09bb7
+sin.((az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π)
 
 # ╔═╡ 42a9d96c-317e-4fa1-aa02-908175bb4291
-(tan.((az2p(dat.days,[.8, 0.9]) - dat.Az)/360*π).^2)
+(tan.((az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π).^2)
 
 # ╔═╡ 150ce705-b0f2-48e4-95d1-a832080b585b
-sum(tan.((az2p(dat.days,[.01, 0.97]) - dat.Az)/360*π).^2)
+sum(tan.((az2p(dat.days,[.8, 0.705]) - dat.Az)/360*π).^2)
+
+# ╔═╡ 74c53eb1-1cbf-40f7-8adc-70f80e1d8a94
+md"""
+Bad fit example
+"""
+
+# ╔═╡ 148d98d6-fa01-4923-8d61-0504c81e25bd
+map(x -> az2p(x, [0.1, 0.97]), dat.days)
+
+# ╔═╡ 0f006827-c17f-4a52-914d-c0a706cd8d97
+dat.Az
+
+# ╔═╡ de423b44-cded-46c1-bb4c-cbb26a195a02
+sum(tan.((map(x -> az2p(x, [0.1, 0.97]), dat.days) - dat.Az)/360*π).^2)
+
+# ╔═╡ 4189cdf5-53d1-4e94-9401-49b8e140141b
+sum(tan.((az2p(dat.days, [0.1, 0.97]) - dat.Az)/360*π).^2)
+
+# ╔═╡ 72cee64a-b20d-4768-b4b9-d7e8131423de
+az2pmin2([0.1, 0.97])
+
+# ╔═╡ a189b1a6-e4b6-4e7f-90b5-0e9ee288a151
+map(x -> az2p(x, [0.1, 0.97]), dat.days)
+
+# ╔═╡ 1d776284-9311-4557-8b29-fc20c605c2a7
+az2p(dat.days, [0.1, 0.97])
+
+# ╔═╡ dfe51879-9a46-4c9c-90c1-463e6aeec130
+md"""
+Good one
+"""
+
+# ╔═╡ a87821ab-aaef-45bf-aa36-8f1e86c248b7
+sum(tan.((map(x -> az2p(x, [0.25, 0.97]), dat.days) - dat.Az)/360*π).^2)
 
 # ╔═╡ db7f1b2f-c9aa-49f8-91fc-ab69a74cb168
 md"""
@@ -155,10 +195,11 @@ Is not working well.
 
 # ╔═╡ bdcc41ab-7b7d-4c60-8ead-3eaee304a511
 begin
-	lower = [0., 0.9]
-	upper = [1, 0.99]
-	initial_x = [0.5,0.97]
+	lower = [-0.4, .9]
+	upper = [0.4, 1.0]
+	initial_x = [0.1,.91]
 	inner_optimizer = GradientDescent()
+	#inner_optimizer = LBFGS()
 	results = optimize(az2pmin, lower, upper, initial_x, Fminbox(inner_optimizer))
 end
 
@@ -173,6 +214,12 @@ end
 # ╔═╡ d64bbafd-6d95-43e8-89d4-0f4f0e67f620
 results2.minimizer
 
+# ╔═╡ 97e2c466-c939-4b26-88f5-92949e089c19
+az2pmin([0.25, 0.97]), az2pmin2([0.25, 0.97])
+
+# ╔═╡ dd4b89e6-5f13-46fc-a5ad-fc49a9a87346
+az2pmin([0.1, 0.97]), az2pmin2([0.1, 0.97])
+
 # ╔═╡ 5baa42cf-9dc4-47a9-89dd-9d672e397748
 md"""
 The fit is not so great for the earlier observations. Is my model too simple?
@@ -182,7 +229,7 @@ The fit is not so great for the earlier observations. Is my model too simple?
 begin
 	# seems fine to combine DateTime and ms
 	@df dat scatter(:days, :Az)
-	plot!(x -> az2p(x, results.minimizer), dat.days[1], dat.days[end], labeel="fit1")
+	plot!(x -> az2p(x, results.minimizer), dat.days[1], dat.days[end], label="fit1")
 	plot!(x -> az2p(x, results2.minimizer), dat.days[1], dat.days[end], label="fit2")
 end
 
@@ -194,9 +241,9 @@ md"""
 # ╔═╡ 7d6d67b3-af17-470d-8947-9021a077b360
 begin
 	ilen=100
-	jlen=100
+	jlen=1000
 	ir=LinRange(0, 0.8, ilen)
-	jr=LinRange(0.9, 1.0, jlen)
+	jr=LinRange(.9, 1.1, jlen)
 	diffs=zeros(ilen, jlen)
 	for (i,iv) in enumerate(ir)
 		for (j, jv) in enumerate(jr)
@@ -212,15 +259,16 @@ heatmap(jr, ir, log.(diffs))
 minimum(log.(diffs))
 
 # ╔═╡ 0cccf0c5-67d3-4d63-a7f8-0a5a7e3acf34
-heatmap(jr, ir, log.(diffs) .< -9.7)
+heatmap(jr, ir, log.(diffs) .< -2.9)
 
-# ╔═╡ 66bc791f-e941-4902-bc48-1b5d8a375668
+# ╔═╡ 47a1e394-323c-416b-9c3a-9d38b95fe225
+aaa = [[(i, j, log(az2pmin2([i, j]))) for i = ir if log(az2pmin2([i, j])) < -2.9 ] for j = jr]
 
-begin
-	contour(jr, ir, log.(diffs) .< -11)
-	hline!([280])
-	vline!([4.030e-6])
-end
+# ╔═╡ ebe4ed34-49a5-420a-b7a6-b7656576175a
+goodCombsGrid = filter(x -> length(x) > 0, aaa)
+
+# ╔═╡ aaa60a2e-7431-486b-9afe-b626d2860a8d
+goodCombsGrid[1][1][1:2]
 
 # ╔═╡ 11aceb49-d740-463f-8031-a643f1aa3135
 
@@ -229,8 +277,8 @@ end
 begin
 	@df dat scatter(:days, :Az, label="Az")
 	sl=0.9
-	plot!(x ->mod(x*results.minimizer[2]+results.minimizer[1], 1)*360, dat.days[1], dat.days[8], label="fit")
-	#plot!(x ->mod(x*sl+200, 360), dat.ms[1], dat.ms[8], label="fit2")
+	plot!(x -> az2p(x, [0.25, 0.97]), dat.days[1], dat.days[8], label="good fit")
+	plot!(x ->az2p(x, goodCombsGrid[5][1][1:2]), dat.days[1], dat.days[8], label="grid")
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1870,17 +1918,31 @@ version = "1.4.1+1"
 # ╠═7604744c-2f2c-4ee6-93e6-e0f905d363c0
 # ╠═fffd1449-98fb-4acd-9970-511701229854
 # ╠═f08f5337-3230-4c32-8dde-e2a2475f0ded
+# ╠═3ee64fa5-ade7-4e5c-957d-da83bc4f2eca
 # ╠═ab92ae27-26d9-4df8-adc4-2704a9ca1de3
 # ╠═84c79fdb-9dce-42b8-b3f8-033336083bc9
 # ╠═892e80c2-43b6-492c-a901-8c635951f3ff
 # ╠═d4e7ad4d-f35b-4933-b06a-a6a4bd092515
+# ╠═021ccbe8-7452-4413-af64-705e3cd09bb7
 # ╠═42a9d96c-317e-4fa1-aa02-908175bb4291
 # ╠═150ce705-b0f2-48e4-95d1-a832080b585b
+# ╠═74c53eb1-1cbf-40f7-8adc-70f80e1d8a94
+# ╠═148d98d6-fa01-4923-8d61-0504c81e25bd
+# ╠═0f006827-c17f-4a52-914d-c0a706cd8d97
+# ╠═de423b44-cded-46c1-bb4c-cbb26a195a02
+# ╠═4189cdf5-53d1-4e94-9401-49b8e140141b
+# ╠═72cee64a-b20d-4768-b4b9-d7e8131423de
+# ╠═a189b1a6-e4b6-4e7f-90b5-0e9ee288a151
+# ╠═1d776284-9311-4557-8b29-fc20c605c2a7
+# ╠═dfe51879-9a46-4c9c-90c1-463e6aeec130
+# ╠═a87821ab-aaef-45bf-aa36-8f1e86c248b7
 # ╟─db7f1b2f-c9aa-49f8-91fc-ab69a74cb168
 # ╠═bdcc41ab-7b7d-4c60-8ead-3eaee304a511
 # ╠═0e6f7d0b-58fc-4edb-9158-fdfb42e1ec2b
 # ╠═c1ebd018-1578-4c4b-9bbe-2ffe0cf86597
 # ╠═d64bbafd-6d95-43e8-89d4-0f4f0e67f620
+# ╠═97e2c466-c939-4b26-88f5-92949e089c19
+# ╠═dd4b89e6-5f13-46fc-a5ad-fc49a9a87346
 # ╟─5baa42cf-9dc4-47a9-89dd-9d672e397748
 # ╠═c6e012f9-14b3-45bd-bc6b-c88947dd76ca
 # ╟─65b6368d-f54e-4f02-b885-f05d2be30aaf
@@ -1888,7 +1950,9 @@ version = "1.4.1+1"
 # ╠═74c53971-145e-4053-97f6-c6ae926a6426
 # ╠═d12a9b39-065d-4cad-a4d4-13adf30e5eeb
 # ╠═0cccf0c5-67d3-4d63-a7f8-0a5a7e3acf34
-# ╠═66bc791f-e941-4902-bc48-1b5d8a375668
+# ╠═47a1e394-323c-416b-9c3a-9d38b95fe225
+# ╠═ebe4ed34-49a5-420a-b7a6-b7656576175a
+# ╠═aaa60a2e-7431-486b-9afe-b626d2860a8d
 # ╠═11aceb49-d740-463f-8031-a643f1aa3135
 # ╠═adb5cd95-9b4e-4cab-8a70-73b96aece51e
 # ╟─00000000-0000-0000-0000-000000000001
