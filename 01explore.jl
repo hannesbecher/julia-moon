@@ -41,6 +41,9 @@ md"""
 # ╔═╡ e4a680a4-359a-48b9-af54-79de7d36a022
 dat=CSV.read("data/data", DataFrame, header=true)
 
+# ╔═╡ 62376173-5e59-4e91-a8fc-d38b67cf2ab5
+nObs=size(dat)[1]
+
 # ╔═╡ caddc3f0-ca99-4e65-b5e0-32645b044601
 dat.dt=[DateTime(x[1], x[2]) for x in zip(dat.date, dat.time)]
 
@@ -64,6 +67,9 @@ dat.days2 = dat.days .- 738790
 
 # ╔═╡ 42621d26-0423-44ba-90cc-3b48b6a0a414
 dat
+
+# ╔═╡ 0f166ced-2b34-4825-8319-a334357e5598
+
 
 # ╔═╡ 72e1cfd1-c027-4443-910c-4113ade5d824
 md"""
@@ -136,25 +142,25 @@ az2pmin2(x) = sum(tan.((az2p(dat.days2, x) - dat.Az)/360*π).^2)
 dat.Az
 
 # ╔═╡ ab92ae27-26d9-4df8-adc4-2704a9ca1de3
-az2p(dat.days2,[.8, 0.705])
+az2p(dat.days2,[.55, 0.97])
 
 # ╔═╡ 84c79fdb-9dce-42b8-b3f8-033336083bc9
-az2p(dat.days2,[.8, 0.705]) - dat.Az
+az2p(dat.days2,[.55, 0.97]) - dat.Az
 
 # ╔═╡ 892e80c2-43b6-492c-a901-8c635951f3ff
-(az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π
+(az2p(dat.days2,[.55, 0.97]) - dat.Az)/360*π
 
 # ╔═╡ d4e7ad4d-f35b-4933-b06a-a6a4bd092515
-tan.((az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π)
+tan.((az2p(dat.days2,[.55, 0.97]) - dat.Az)/360*π)
 
 # ╔═╡ 021ccbe8-7452-4413-af64-705e3cd09bb7
-sin.((az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π)
+sin.((az2p(dat.days2,[.55, 0.97]) - dat.Az)/360*π)
 
 # ╔═╡ 42a9d96c-317e-4fa1-aa02-908175bb4291
-(tan.((az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π).^2)
+(tan.((az2p(dat.days2,[.55, 0.97]) - dat.Az)/360*π).^2)
 
 # ╔═╡ 150ce705-b0f2-48e4-95d1-a832080b585b
-sum(tan.((az2p(dat.days2,[.8, 0.705]) - dat.Az)/360*π).^2)
+sum(tan.((az2p(dat.days2,[.55, 0.97]) - dat.Az)/360*π).^2)
 
 # ╔═╡ 74c53eb1-1cbf-40f7-8adc-70f80e1d8a94
 md"""
@@ -199,7 +205,7 @@ Is not working well.
 # ╔═╡ bdcc41ab-7b7d-4c60-8ead-3eaee304a511
 begin
 	lower = [0.0, .9]
-	upper = [0.9, 1.0]
+	upper = [0.9, .99]
 	initial_x = [0.4,.91]
 	inner_optimizer = GradientDescent()
 	#inner_optimizer = LBFGS()
@@ -262,11 +268,11 @@ heatmap(jr, ir, log.(diffs))
 minimum(log.(diffs))
 
 # ╔═╡ 0cccf0c5-67d3-4d63-a7f8-0a5a7e3acf34
-heatmap(jr, ir, log.(diffs) .< -2.9)
+heatmap(jr, ir, log.(diffs) .< -2)
 
 # ╔═╡ 47a1e394-323c-416b-9c3a-9d38b95fe225
 # retain only good fits
-aaa = [[(i, j, log(az2pmin2([i, j]))) for i = ir if log(az2pmin2([i, j])) < -2.9 ] for j = jr]
+aaa = [[(i, j, log(az2pmin2([i, j]))) for i = ir if log(az2pmin2([i, j])) < -2.48 ] for j = jr]
 
 # ╔═╡ ebe4ed34-49a5-420a-b7a6-b7656576175a
 goodCombsGrid = filter(x -> length(x) > 0, aaa)
@@ -281,23 +287,43 @@ goodCombsGrid[1][1][1:2]
 begin
 	@df dat scatter(:days2, :Az, label="Az")
 	sl=0.9
-	plot!(x ->az2p(x, goodCombsGrid[3][1][1:2]), dat.days2[1], dat.days2[8], label="grid3")
-	plot!(x ->az2p(x, goodCombsGrid[5][1][1:2]), dat.days2[1], dat.days2[8], label="grid5")
+	plot!(x ->az2p(x, goodCombsGrid[3][1][1:2]), dat.days2[1], dat.days2[end], label="grid3")
+	plot!(x ->az2p(x, goodCombsGrid[5][1][1:2]), dat.days2[1], dat.days2[end], label="grid5")
 end
 
 # ╔═╡ 75fc039d-0213-428f-af7f-0ec0eaa1ae41
 md"""
 # Altitude
+This is more complex. The max altitude differes with time. Adding in public data from https://www.timeanddate.com/moon/uk/edinburgh. These are altitude values when the moon passed the meridian (which are usually different to the maximum altitude values).
 """
+
+# ╔═╡ a1b80f8b-fbde-48ad-a653-5996f251abc5
+datM = CSV.read("data/meridianWeb", DataFrame)
+
+# ╔═╡ 6d420c7b-264b-4636-b88f-19e337b313c0
+datM.dt=[DateTime(x[1], x[2]) for x in zip(datM.date, datM.time)]
+
+# ╔═╡ b95ba09d-2c32-4b5b-9300-46ff1df04935
+datM.ms = map(Dates.value, datM.dt)
+
+# ╔═╡ d1f54525-a727-4d4a-a448-c46ada17fa36
+datM.days= datM.ms./(1000*60*60*24)
+
+# ╔═╡ d982ab85-64db-476d-9989-c8b10c8ee89f
+datM.days2 = datM.days .- 738790
+
+# ╔═╡ e102a9ac-b3e5-4ff5-a6d2-bf67dba3ab45
+datM
 
 # ╔═╡ 92df73a2-4e94-4fd5-8958-9f9c959c6d3e
 begin
 	@df dat scatter(:days2, :decalt, label="Altitude data")
-	plot!(x -> sin(x*2π*1-5.9)*90, dat.days2[1], dat.days2[8], label="manual fit")
+	@df datM scatter!(:days2, :decalt, label="Merid alt")
+	plot!(x -> sin(x*2π*.97+7)*(sin(x/2.5π+0.34)+1), dat.days2[1], dat.days2[end]+10, label="manual fit")
 end
 
 # ╔═╡ 4cb671ac-d8fe-4b6f-943f-854c3ca2ae5f
-@df dat scatter(:Az, :decalt)
+@df dat plot(:Az, :decalt)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1913,6 +1939,7 @@ version = "1.4.1+1"
 # ╠═a2587eec-ad13-40b9-b75e-4a155a7eb194
 # ╟─c3a7a202-a676-40e0-9003-2d6a66420ac9
 # ╠═e4a680a4-359a-48b9-af54-79de7d36a022
+# ╠═62376173-5e59-4e91-a8fc-d38b67cf2ab5
 # ╠═caddc3f0-ca99-4e65-b5e0-32645b044601
 # ╠═135c02fa-7bea-4730-af40-53e7a4f02962
 # ╠═7297da96-ca98-4fe5-b665-53f35cc40603
@@ -1920,6 +1947,7 @@ version = "1.4.1+1"
 # ╠═686b681d-a7f7-4d27-a779-059885c85ee2
 # ╠═623b1126-9110-4bda-a5ce-bb98bfe0c293
 # ╠═42621d26-0423-44ba-90cc-3b48b6a0a414
+# ╠═0f166ced-2b34-4825-8319-a334357e5598
 # ╟─72e1cfd1-c027-4443-910c-4113ade5d824
 # ╠═937f4fa0-d296-4634-8123-8763639282fc
 # ╠═74b6b55e-8d4a-441a-a78e-bf04cce7ae3c
@@ -1974,7 +2002,13 @@ version = "1.4.1+1"
 # ╠═aaa60a2e-7431-486b-9afe-b626d2860a8d
 # ╠═11aceb49-d740-463f-8031-a643f1aa3135
 # ╠═adb5cd95-9b4e-4cab-8a70-73b96aece51e
-# ╠═75fc039d-0213-428f-af7f-0ec0eaa1ae41
+# ╟─75fc039d-0213-428f-af7f-0ec0eaa1ae41
+# ╠═a1b80f8b-fbde-48ad-a653-5996f251abc5
+# ╠═6d420c7b-264b-4636-b88f-19e337b313c0
+# ╠═b95ba09d-2c32-4b5b-9300-46ff1df04935
+# ╠═d1f54525-a727-4d4a-a448-c46ada17fa36
+# ╠═d982ab85-64db-476d-9989-c8b10c8ee89f
+# ╠═e102a9ac-b3e5-4ff5-a6d2-bf67dba3ab45
 # ╠═92df73a2-4e94-4fd5-8958-9f9c959c6d3e
 # ╠═4cb671ac-d8fe-4b6f-943f-854c3ca2ae5f
 # ╟─00000000-0000-0000-0000-000000000001
